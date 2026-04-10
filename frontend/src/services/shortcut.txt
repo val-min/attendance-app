@@ -1,0 +1,23 @@
+mysql -u root -p
+
+// backend
+npm run start:dev
+// frontend
+npm start
+
+//pw admin: Admin@1234
+
+$2b$10$qE5iu4jN/7QCC4dKK2E8fe0sUK0ml4VtE8Anp273s7mUO8i8zjy1S
+
+UPDATE employees 
+SET password = '$2b$10$qE5iu4jN/7QCC4dKK2E8fe0sUK0ml4VtE8Anp273s7mUO8i8zjy1S' 
+WHERE email = 'admin@company.com';
+
+budi@company.com
+pw budi: aman123
+
+valen@company.com
+lanjut123
+
+sella@company.com
+coba123
