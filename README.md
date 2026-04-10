@@ -120,19 +120,20 @@ Frontend berjalan di: `http://localhost:3001`
 ---
 
 ## 📁 Struktur Project
-attendance-app/
-├── backend/          # NestJS API
-│   ├── src/
-│   │   ├── auth/         # Authentication & JWT
-│   │   ├── employees/    # CRUD Karyawan
-│   │   ├── attendance/   # Absensi
-│   │   └── app.module.ts
-│   └── uploads/      # Foto absensi
-└── frontend/         # React.js
-└── src/
-├── pages/        # Login, Employee, Admin
-└── services/     # API calls
 
+```
+attendance-app/
+├── backend/                # NestJS API
+│   └── src/
+│       ├── auth/           # Authentication & JWT
+│       ├── employees/      # CRUD Karyawan
+│       ├── attendance/     # Absensi
+│       └── app.module.ts
+└── frontend/               # React.js
+    └── src/
+        ├── pages/          # Login, Employee, Admin
+        └── services/       # API calls
+```
 ---
 
 ## 👨‍💻 Author
