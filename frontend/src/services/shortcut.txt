@@ -1,4 +1,39 @@
+# Buat Backend
+nest new backend
+
+# Buat Frontend
+npx create-react-app frontend --template typescript
+
 mysql -u root -p
+
+CREATE DATABASE attendance_db;
+USE attendance_db;
+
+-- Tabel Karyawan
+CREATE TABLE employees (
+  id          INT PRIMARY KEY AUTO_INCREMENT,
+  name        VARCHAR(100) NOT NULL,
+  email       VARCHAR(100) UNIQUE NOT NULL,
+  password    VARCHAR(255) NOT NULL,
+  department  VARCHAR(100),
+  position    VARCHAR(100),
+  role        ENUM('admin', 'employee') DEFAULT 'employee',
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Tabel Absensi
+CREATE TABLE attendances (
+  id          INT PRIMARY KEY AUTO_INCREMENT,
+  employee_id INT NOT NULL,
+  date        DATE NOT NULL,
+  check_in    DATETIME,
+  check_out   DATETIME,
+  photo_url   VARCHAR(255),
+  status      ENUM('present','late','absent') DEFAULT 'present',
+  created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
 
 // backend
 npm run start:dev
@@ -15,3 +50,13 @@ lanjut123
 
 sella@company.com
 coba123
+
+alvaro@company.com
+AlvaroSutanto7284
+
+john@company.com
+JohnKaisen4283
+
+Helena6873
+
+Alvaro8035

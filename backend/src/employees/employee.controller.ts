@@ -9,8 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { EmployeesService } from './employee.service';
+import { EmployeesService, EmployeeWithPassword } from './employee.service';
 import { Employee } from './employee.entity';
+import { CreateEmployeeDto, UpdateEmployeeDto } from './employee.dto';
 
 @Controller('employees')
 @UseGuards(AuthGuard('jwt'))
@@ -27,17 +28,33 @@ export class EmployeesController {
     return this.employeesService.findOne(+id);
   }
 
+  // Pakai partial Employee
+  // @Post()
+  // create(@Body() body: Partial<Employee>): Promise<Employee> {
+  //   return this.employeesService.create(body);
+  // }
+
+  // @Put(':id')
+  // update(
+  //   @Param('id') id: string,
+  //   @Body() body: Partial<Employee>,
+  // ): Promise<Employee> {
+  //   return this.employeesService.update(+id, body);
+  // }
+
+  // Pakai DTO
   @Post()
-  create(@Body() body: Partial<Employee>): Promise<Employee> {
-    return this.employeesService.create(body);
+  create(@Body() dto: CreateEmployeeDto): Promise<EmployeeWithPassword> {
+    // ← hapus return type Promise<Employee>
+    return this.employeesService.create(dto);
   }
 
   @Put(':id')
   update(
     @Param('id') id: string,
-    @Body() body: Partial<Employee>,
+    @Body() dto: UpdateEmployeeDto,
   ): Promise<Employee> {
-    return this.employeesService.update(+id, body);
+    return this.employeesService.update(+id, dto);
   }
 
   @Delete(':id')

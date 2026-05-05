@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -23,14 +23,14 @@ import {
   Alert,
   Tabs,
   Tab,
-} from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PeopleIcon from '@mui/icons-material/People';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import api from '../services/api';
+} from "@mui/material";
+import LogoutIcon from "@mui/icons-material/Logout";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import PeopleIcon from "@mui/icons-material/People";
+import AssignmentIcon from "@mui/icons-material/Assignment";
+import api from "../services/api";
 
 interface Employee {
   id: number;
@@ -47,7 +47,7 @@ interface Attendance {
   date: string;
   check_in: string;
   check_out: string | null;
-  status: 'present' | 'late' | 'absent';
+  status: "present" | "late" | "absent";
   photo_url: string;
   employee: {
     id: number;
@@ -56,13 +56,13 @@ interface Attendance {
   };
 }
 
+// ✅ Hapus field password dari emptyForm
 const emptyForm = {
-  name: '',
-  email: '',
-  password: '',
-  department: '',
-  position: '',
-  role: 'employee',
+  name: "",
+  email: "",
+  department: "",
+  position: "",
+  role: "employee",
 };
 
 const AdminDashboard = () => {
@@ -71,12 +71,22 @@ const AdminDashboard = () => {
   const [attendances, setAttendances] = useState<Attendance[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
+    null,
+  );
   const [form, setForm] = useState(emptyForm);
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  // ✅ State untuk modal password
+  const [newPassword, setNewPassword] = useState("");
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   useEffect(() => {
     fetchEmployees();
@@ -85,19 +95,19 @@ const AdminDashboard = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await api.get('/employees');
+      const response = await api.get("/employees");
       setEmployees(response.data);
     } catch (err) {
-      console.error('Gagal memuat data karyawan', err);
+      console.error("Gagal memuat data karyawan", err);
     }
   };
 
   const fetchAttendances = async () => {
     try {
-      const response = await api.get('/attendance/all');
+      const response = await api.get("/attendance/all");
       setAttendances(response.data);
     } catch (err) {
-      console.error('Gagal memuat data absensi', err);
+      console.error("Gagal memuat data absensi", err);
     }
   };
 
@@ -113,7 +123,7 @@ const AdminDashboard = () => {
     setForm({
       name: employee.name,
       email: employee.email,
-      password: '',
+      // ✅ Tidak ada password di sini
       department: employee.department,
       position: employee.position,
       role: employee.role,
@@ -132,18 +142,31 @@ const AdminDashboard = () => {
     setMessage(null);
     try {
       if (selectedEmployee) {
-        const updateData: any = { ...form };
-        if (!updateData.password) delete updateData.password;
-        await api.put(`/employees/${selectedEmployee.id}`, updateData);
-        setMessage({ type: 'success', text: 'Data karyawan berhasil diupdate!' });
+        // ✅ Update — tidak kirim password sama sekali
+        await api.put(`/employees/${selectedEmployee.id}`, form);
+        setMessage({
+          type: "success",
+          text: "Data karyawan berhasil diupdate!",
+        });
+        fetchEmployees();
+        setTimeout(() => setDialogOpen(false), 1000);
       } else {
-        await api.post('/employees', form);
-        setMessage({ type: 'success', text: 'Karyawan baru berhasil ditambahkan!' });
+        // ✅ Create — tangkap plainPassword dari response
+        const response = await api.post("/employees", form);
+        const data = response.data;
+
+        fetchEmployees();
+        setDialogOpen(false);
+
+        // Tampilkan modal password
+        setNewPassword(data.plainPassword);
+        setShowPasswordModal(true);
       }
-      fetchEmployees();
-      setTimeout(() => setDialogOpen(false), 1000);
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.response?.data?.message || 'Terjadi kesalahan' });
+      setMessage({
+        type: "error",
+        text: err.response?.data?.message || "Terjadi kesalahan",
+      });
     } finally {
       setLoading(false);
     }
@@ -156,25 +179,43 @@ const AdminDashboard = () => {
       fetchEmployees();
       setDeleteDialogOpen(false);
     } catch (err: any) {
-      console.error('Gagal menghapus karyawan', err);
+      console.error("Gagal menghapus karyawan", err);
     }
   };
 
   const handleLogout = () => {
     localStorage.clear();
-    window.location.href = '/login';
+    window.location.href = "/login";
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5" }}>
       {/* Navbar */}
       <Paper elevation={1} sx={{ px: 4, py: 2, borderRadius: 0 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1100, mx: 'auto' }}>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            maxWidth: 1100,
+            mx: "auto",
+          }}
+        >
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: "bold", color: "primary.main" }}
+          >
             Attendance App — Admin
           </Typography>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 14 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: "primary.main",
+                fontSize: 14,
+              }}
+            >
               {user.name?.charAt(0).toUpperCase()}
             </Avatar>
             <Typography variant="body2" color="text.secondary">
@@ -194,22 +235,36 @@ const AdminDashboard = () => {
       </Paper>
 
       <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* Tabs */}
         <Paper elevation={3} sx={{ borderRadius: 2, mb: 3 }}>
           <Tabs
             value={tab}
             onChange={(_, newValue) => setTab(newValue)}
-            sx={{ px: 2, borderBottom: '1px solid #f0f0f0' }}
+            sx={{ px: 2, borderBottom: "1px solid #f0f0f0" }}
           >
-            <Tab icon={<PeopleIcon />} iconPosition="start" label="Manajemen Karyawan" />
-            <Tab icon={<AssignmentIcon />} iconPosition="start" label="Monitor Absensi" />
+            <Tab
+              icon={<PeopleIcon />}
+              iconPosition="start"
+              label="Manajemen Karyawan"
+            />
+            <Tab
+              icon={<AssignmentIcon />}
+              iconPosition="start"
+              label="Monitor Absensi"
+            />
           </Tabs>
 
           {/* Tab 1 — Manajemen Karyawan */}
           {tab === 0 && (
             <Box sx={{ p: 3 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: "bold" }}>
                   Data Karyawan
                 </Typography>
                 <Button
@@ -224,19 +279,35 @@ const AdminDashboard = () => {
               <TableContainer>
                 <Table>
                   <TableHead>
-                    <TableRow sx={{ backgroundColor: '#f9f9f9' }}>
-                      <TableCell><strong>Nama</strong></TableCell>
-                      <TableCell><strong>Email</strong></TableCell>
-                      <TableCell><strong>Departemen</strong></TableCell>
-                      <TableCell><strong>Posisi</strong></TableCell>
-                      <TableCell><strong>Role</strong></TableCell>
-                      <TableCell><strong>Aksi</strong></TableCell>
+                    <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                      <TableCell>
+                        <strong>Nama</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Email</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Departemen</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Posisi</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Role</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Aksi</strong>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {employees.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                        <TableCell
+                          colSpan={6}
+                          align="center"
+                          sx={{ py: 4, color: "text.secondary" }}
+                        >
                           Belum ada data karyawan
                         </TableCell>
                       </TableRow>
@@ -244,25 +315,40 @@ const AdminDashboard = () => {
                       employees.map((emp) => (
                         <TableRow key={emp.id} hover>
                           <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Avatar sx={{ width: 28, height: 28, fontSize: 12, bgcolor: 'primary.main' }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Avatar
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  fontSize: 12,
+                                  bgcolor: "primary.main",
+                                }}
+                              >
                                 {emp.name?.charAt(0).toUpperCase()}
                               </Avatar>
                               {emp.name}
                             </Box>
                           </TableCell>
                           <TableCell>{emp.email}</TableCell>
-                          <TableCell>{emp.department || '-'}</TableCell>
-                          <TableCell>{emp.position || '-'}</TableCell>
+                          <TableCell>{emp.department || "-"}</TableCell>
+                          <TableCell>{emp.position || "-"}</TableCell>
                           <TableCell>
                             <Chip
                               label={emp.role.toUpperCase()}
-                              color={emp.role === 'admin' ? 'primary' : 'default'}
+                              color={
+                                emp.role === "admin" ? "primary" : "default"
+                              }
                               size="small"
                             />
                           </TableCell>
                           <TableCell>
-                            <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Box sx={{ display: "flex", gap: 1 }}>
                               <Button
                                 size="small"
                                 variant="outlined"
@@ -294,26 +380,42 @@ const AdminDashboard = () => {
           {/* Tab 2 — Monitor Absensi */}
           {tab === 1 && (
             <Box sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+              <Typography variant="h6" sx={{ fontWeight: "bold", mb: 2 }}>
                 Monitor Absensi Karyawan
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <TableContainer>
                 <Table>
                   <TableHead>
-                    <TableRow sx={{ backgroundColor: '#f9f9f9' }}>
-                      <TableCell><strong>Karyawan</strong></TableCell>
-                      <TableCell><strong>Tanggal</strong></TableCell>
-                      <TableCell><strong>Check In</strong></TableCell>
-                      <TableCell><strong>Check Out</strong></TableCell>
-                      <TableCell><strong>Status</strong></TableCell>
-                      <TableCell><strong>Foto</strong></TableCell>
+                    <TableRow sx={{ backgroundColor: "#f9f9f9" }}>
+                      <TableCell>
+                        <strong>Karyawan</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Tanggal</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Check In</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Check Out</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Status</strong>
+                      </TableCell>
+                      <TableCell>
+                        <strong>Foto</strong>
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {attendances.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} align="center" sx={{ py: 4, color: 'text.secondary' }}>
+                        <TableCell
+                          colSpan={6}
+                          align="center"
+                          sx={{ py: 4, color: "text.secondary" }}
+                        >
                           Belum ada data absensi
                         </TableCell>
                       </TableRow>
@@ -321,8 +423,21 @@ const AdminDashboard = () => {
                       attendances.map((at) => (
                         <TableRow key={at.id} hover>
                           <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Avatar sx={{ width: 28, height: 28, fontSize: 12, bgcolor: 'secondary.main' }}>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 1,
+                              }}
+                            >
+                              <Avatar
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  fontSize: 12,
+                                  bgcolor: "secondary.main",
+                                }}
+                              >
                                 {at.employee?.name?.charAt(0).toUpperCase()}
                               </Avatar>
                               {at.employee?.name}
@@ -330,15 +445,25 @@ const AdminDashboard = () => {
                           </TableCell>
                           <TableCell>{at.date}</TableCell>
                           <TableCell>
-                            {at.check_in ? new Date(at.check_in).toLocaleTimeString('id-ID') : '-'}
+                            {at.check_in
+                              ? new Date(at.check_in).toLocaleTimeString(
+                                  "id-ID",
+                                )
+                              : "-"}
                           </TableCell>
                           <TableCell>
-                            {at.check_out ? new Date(at.check_out).toLocaleTimeString('id-ID') : '-'}
+                            {at.check_out
+                              ? new Date(at.check_out).toLocaleTimeString(
+                                  "id-ID",
+                                )
+                              : "-"}
                           </TableCell>
                           <TableCell>
                             <Chip
                               label={at.status.toUpperCase()}
-                              color={at.status === 'present' ? 'success' : 'warning'}
+                              color={
+                                at.status === "present" ? "success" : "warning"
+                              }
                               size="small"
                             />
                           </TableCell>
@@ -346,7 +471,12 @@ const AdminDashboard = () => {
                             <Button
                               size="small"
                               variant="text"
-                              onClick={() => window.open(`http://localhost:3000${at.photo_url}`, '_blank')}
+                              onClick={() =>
+                                window.open(
+                                  `http://localhost:3000${at.photo_url}`,
+                                  "_blank",
+                                )
+                              }
                             >
                               Lihat Foto
                             </Button>
@@ -363,9 +493,14 @@ const AdminDashboard = () => {
       </Container>
 
       {/* Dialog Tambah/Edit Karyawan */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ fontWeight: 'bold' }}>
-          {selectedEmployee ? 'Edit Karyawan' : 'Tambah Karyawan Baru'}
+      <Dialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ fontWeight: "bold" }}>
+          {selectedEmployee ? "Edit Karyawan" : "Tambah Karyawan Baru"}
         </DialogTitle>
         <DialogContent>
           {message && (
@@ -373,7 +508,7 @@ const AdminDashboard = () => {
               {message.text}
             </Alert>
           )}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
             <TextField
               label="Nama Lengkap"
               fullWidth
@@ -387,13 +522,7 @@ const AdminDashboard = () => {
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
-            <TextField
-              label={selectedEmployee ? 'Password Baru (kosongkan jika tidak diubah)' : 'Password'}
-              type="password"
-              fullWidth
-              value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-            />
+            {/* ✅ Field password dihapus sepenuhnya */}
             <TextField
               label="Departemen"
               fullWidth
@@ -423,18 +552,72 @@ const AdminDashboard = () => {
             Batal
           </Button>
           <Button variant="contained" onClick={handleSave} disabled={loading}>
-            {loading ? 'Menyimpan...' : 'Simpan'}
+            {loading ? "Menyimpan..." : "Simpan"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ✅ Modal Password Pakai MUI Dialog */}
+      <Dialog
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      >
+        <DialogTitle sx={{ fontWeight: "bold" }}>
+          🎉 Karyawan Berhasil Ditambahkan!
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            ⚠️ Password hanya tampil sekali! Catat sebelum menutup.
+          </Alert>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            Berikan password ini ke karyawan:
+          </Typography>
+          <Paper
+            sx={{
+              p: 2,
+              textAlign: "center",
+              backgroundColor: "#f5f5f5",
+              borderRadius: 2,
+            }}
+          >
+            <Typography
+              variant="h5"
+              sx={{ fontWeight: "bold", letterSpacing: 2 }}
+            >
+              {newPassword}
+            </Typography>
+          </Paper>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button
+            variant="contained"
+            color={copied ? "success" : "primary"}
+            onClick={() => {
+              navigator.clipboard.writeText(newPassword);
+              setCopied(true);
+              // Tutup modal otomatis setelah 1.5 detik
+              setTimeout(() => {
+                setShowPasswordModal(false);
+                setCopied(false);
+              }, 1500);
+            }}
+          >
+            {copied ? "✅ Tersalin!" : "Copy Password"}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Dialog Konfirmasi Hapus */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle sx={{ fontWeight: 'bold' }}>Hapus Karyawan</DialogTitle>
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle sx={{ fontWeight: "bold" }}>Hapus Karyawan</DialogTitle>
         <DialogContent>
           <Typography>
-            Apakah kamu yakin ingin menghapus <strong>{selectedEmployee?.name}</strong>?
-            Tindakan ini tidak dapat dibatalkan.
+            Apakah kamu yakin ingin menghapus{" "}
+            <strong>{selectedEmployee?.name}</strong>? Tindakan ini tidak dapat
+            dibatalkan.
           </Typography>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
